@@ -149,14 +149,6 @@ The web interface will be available at http://127.0.0.1:8000
 ### Style Replication
 ![Style Replication](Screenshot%202025-03-13%20at%2015.01.19.png)
 
-## E-commerce Server
-
-Simulacra also includes an experimental e-commerce server for demonstrating persona-based content generation in a retail context:
-
-```bash
-cd simulacra-web
-python run_ecommerce_server.py
-```
 
 ## Development
 
