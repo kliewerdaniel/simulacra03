@@ -1,0 +1,13 @@
+# Ollama
+ollama/
+# Logs
+logs/
+# Environment files
+.env
+simulacra/config/.env
+
+# Python cache
+__pycache__/
+*.pyc
+# Virtual environment
+venv/

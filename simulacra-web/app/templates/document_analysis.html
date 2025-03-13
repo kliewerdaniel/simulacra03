@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}Document Analysis - Simulacra{% endblock %}
+
+{% block additional_head %}
+<style>
+    .custom-file-input:lang(en)~.custom-file-label::after {
+        content: "Browse";
+    }
+    
+    .progress-wrapper {
+        display: none;
+    }
+    
+    #result-section {
+        display: none;
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Document Analysis</h1>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Upload Documents</h5>
+                <p class="card-text">Upload writing samples to analyze the author's style and psychological traits.</p>
+                
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file-upload" class="form-label">Select Documents</label>
+                        <input class="form-control" type="file" id="file-upload" name="files" multiple required>
+                        <div class="form-text">Supported formats: TXT, MD, DOCX, PDF</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="file-extensions" class="form-label">File Extensions</label>
+                        <input type="text" class="form-control" id="file-extensions" name="file_extensions" value="txt,md,docx,pdf">
+                        <div class="form-text">Comma-separated list of file extensions to analyze</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api-key" class="form-label">OpenAI API Key <span class="text-danger">*Required</span></label>
+                        <input type="password" class="form-control" id="api-key" name="api_key" placeholder="sk-..." required>
+                        <div class="form-text">
+                            An OpenAI API key is required for document analysis. 
+                            Your API key will not be stored on the server.
+                            If you don't have an API key, you can get one from 
+                            <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI's website</a>.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>API Key Required:</strong> Document analysis uses OpenAI's API to analyze your documents. 
+                        You need to provide your own API key to use this feature. 
+                        The key is only used for your analysis and is not stored afterward.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Analyze Documents</button>
+                </form>
+                
+                <div class="progress-wrapper mt-4">
+                    <p id="status-message">Processing your files...</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">About Document Analysis</h5>
+                <p class="card-text">
+                    Our document analysis tool examines writing samples to extract stylistic features 
+                    and infer psychological traits of the author.
+                </p>
+                <ul>
+                    <li>Vocabulary analysis</li>
+                    <li>Sentence structure patterns</li>
+                    <li>Stylistic elements identification</li>
+                    <li>Psychological trait inference</li>
+                    <li>Writing style summary</li>
+                </ul>
+                <p class="card-text">
+                    The more documents you provide, the more accurate the analysis will be.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="result-section">
+    <h2 class="mb-4">Analysis Results</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Writing Style Summary</h5>
+                    <div id="writing-style-summary" class="card-text"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Distinguishing Characteristics</h5>
+                    <ul id="distinguishing-characteristics" class="card-text"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Personality Traits</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="personalityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Writing Style Traits</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="writingTraitsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Top Word Frequencies</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="wordFrequencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">Sentence Structures</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="sentenceStructureChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">Recommendations</div>
+                <div class="card-body">
+                    <ul id="recommendations" class="card-text"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <a id="download-report" href="#" class="btn btn-primary" download>Download Full Report</a>
+        <a id="generate-persona" href="#" class="btn btn-outline-primary ms-2">Generate Persona</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadForm = document.getElementById('upload-form');
+        const progressWrapper = document.querySelector('.progress-wrapper');
+        const statusMessage = document.getElementById('status-message');
+        const resultSection = document.getElementById('result-section');
+        
+        let charts = {};
+        let taskId = null;
+        
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Check for API key
+            const apiKey = document.getElementById('api-key').value;
+            if (!apiKey) {
+                alert('OpenAI API key is required for document analysis.');
+                document.getElementById('api-key').focus();
+                return;
+            }
+            
+            // Check for files
+            const fileInput = document.getElementById('file-upload');
+            if (fileInput.files.length === 0) {
+                alert('Please select at least one file to analyze.');
+                return;
+            }
+            
+            // Show progress
+            progressWrapper.style.display = 'block';
+            statusMessage.textContent = 'Uploading files...';
+            
+            // Hide results from previous analysis
+            resultSection.style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(uploadForm);
+            
+            // Get auth token
+            const token = localStorage.getItem('auth_token');
+            
+            // Submit the form with authentication
+            fetch('/api/document-analysis/analyze', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                taskId = data.task_id;
+                statusMessage.textContent = `Processing documents... (Task ID: ${taskId})`;
+                
+                // Poll for status
+                pollTaskStatus(taskId);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Handle unauthorized error specifically
+                if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                    statusMessage.textContent = `Authentication Error: Please make sure you are logged in`;
+                    
+                    // Check if token exists
+                    if (!localStorage.getItem('auth_token')) {
+                        statusMessage.textContent += `. No authentication token found. Try logging out and back in.`;
+                    }
+                    
+                    // Provide a logout/login link
+                    const loginLink = document.createElement('div');
+                    loginLink.innerHTML = '<a href="/auth/login" class="btn btn-sm btn-primary mt-2">Go to Login</a>';
+                    progressWrapper.appendChild(loginLink);
+                } else {
+                    statusMessage.textContent = `Error: ${error.message}`;
+                }
+                
+                progressWrapper.classList.add('text-danger');
+            });
+        });
+        
+        function pollTaskStatus(taskId) {
+            // Get auth token
+            const token = localStorage.getItem('auth_token');
+            
+            fetch(`/api/document-analysis/status/${taskId}`, {
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusMessage.textContent = `Status: ${data.status.toUpperCase()}`;
+                
+                if (data.status === 'completed') {
+                    // Load results
+                    fetchResults(taskId);
+                } else if (data.status === 'failed') {
+                    let errorMessage = data.error || 'Analysis failed';
+                    if (data.help) {
+                        errorMessage += ` - ${data.help}`;
+                    }
+                    statusMessage.textContent = `Error: ${errorMessage}`;
+                    progressWrapper.classList.add('text-danger');
+                    
+                    // If it's an API key error, add a button to try again
+                    if (data.error && data.error.includes('API key')) {
+                        const retryButton = document.createElement('button');
+                        retryButton.className = 'btn btn-primary mt-2';
+                        retryButton.textContent = 'Try Again with New API Key';
+                        retryButton.onclick = function() {
+                            progressWrapper.style.display = 'none';
+                            progressWrapper.classList.remove('text-danger');
+                            document.getElementById('api-key').focus();
+                        };
+                        progressWrapper.appendChild(retryButton);
+                    }
+                } else {
+                    // Continue polling
+                    setTimeout(() => pollTaskStatus(taskId), 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Error polling status:', error);
+                
+                // Handle unauthorized error specifically
+                if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                    statusMessage.textContent = `Authentication Error: Please make sure you are logged in`;
+                    
+                    // Check if token exists
+                    if (!localStorage.getItem('auth_token')) {
+                        statusMessage.textContent += `. No authentication token found. Try logging out and back in.`;
+                    }
+                    
+                    // Provide a logout/login link
+                    const loginLink = document.createElement('div');
+                    loginLink.innerHTML = '<a href="/auth/login" class="btn btn-sm btn-primary mt-2">Go to Login</a>';
+                    progressWrapper.appendChild(loginLink);
+                } else {
+                    statusMessage.textContent = `Error checking status: ${error.message}`;
+                }
+                
+                progressWrapper.classList.add('text-danger');
+            });
+        }
+        
+        function fetchResults(taskId) {
+            // Get auth token
+            const token = localStorage.getItem('auth_token');
+            
+            // Get results
+            fetch(`/api/document-analysis/result/${taskId}`, {
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Process results
+                displayResults(data);
+                
+                // Get visualization data
+                return fetch(`/api/document-analysis/visualize/${taskId}`, {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            })
+            .then(response => response.json())
+            .then(visData => {
+                // Create visualizations
+                createVisualizations(visData);
+                
+                // Hide progress, show results
+                progressWrapper.style.display = 'none';
+                resultSection.style.display = 'block';
+                
+                // Set up download link with authentication
+                const downloadBtn = document.getElementById('download-report');
+                downloadBtn.removeAttribute('href');
+                downloadBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get auth token
+                    const token = localStorage.getItem('auth_token');
+                    
+                    // Create a fetch request with authentication
+                    fetch(`/api/document-analysis/result/${taskId}/download`, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Download failed: ' + response.status);
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        // Create a download link
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = `document_analysis_report_${taskId}.md`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    })
+                    .catch(error => {
+                        console.error('Error downloading report:', error);
+                        alert('Error downloading report: ' + error.message);
+                    });
+                });
+                
+                // Set up generate persona link with proper format
+                document.getElementById('generate-persona').href = `/persona-generation?from_analysis=${taskId}`;
+            })
+            .catch(error => {
+                console.error('Error fetching results:', error);
+                
+                // Handle unauthorized error specifically
+                if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                    statusMessage.textContent = `Authentication Error: Please make sure you are logged in`;
+                    
+                    // Check if token exists
+                    if (!localStorage.getItem('auth_token')) {
+                        statusMessage.textContent += `. No authentication token found. Try logging out and back in.`;
+                    }
+                    
+                    // Provide a logout/login link
+                    const loginLink = document.createElement('div');
+                    loginLink.innerHTML = '<a href="/auth/login" class="btn btn-sm btn-primary mt-2">Go to Login</a>';
+                    progressWrapper.appendChild(loginLink);
+                } else {
+                    statusMessage.textContent = `Error fetching results: ${error.message}`;
+                }
+                
+                progressWrapper.classList.add('text-danger');
+            });
+        }
+        
+        function displayResults(data) {
+            // Display writing style summary
+            document.getElementById('writing-style-summary').textContent = data.analysis.writing_style_summary;
+            
+            // Display distinguishing characteristics
+            const characteristicsList = document.getElementById('distinguishing-characteristics');
+            characteristicsList.innerHTML = '';
+            data.analysis.distinguishing_characteristics.forEach(characteristic => {
+                const li = document.createElement('li');
+                li.textContent = characteristic;
+                characteristicsList.appendChild(li);
+            });
+            
+            // Display recommendations
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+            data.analysis.recommendations.forEach(recommendation => {
+                const li = document.createElement('li');
+                li.textContent = recommendation;
+                recommendationsList.appendChild(li);
+            });
+        }
+        
+        function createVisualizations(visData) {
+            // Create personality radar chart
+            createRadarChart('personalityChart', 
+                visData.personality_radar.labels, 
+                visData.personality_radar.values,
+                'Personality Traits'
+            );
+            
+            // Create writing traits radar chart
+            createRadarChart('writingTraitsChart', 
+                visData.writing_style.labels, 
+                visData.writing_style.values,
+                'Writing Style Traits'
+            );
+            
+            // Create word frequency bar chart
+            createBarChart('wordFrequencyChart',
+                visData.word_frequencies.labels.slice(0, 10),
+                visData.word_frequencies.values.slice(0, 10),
+                'Most Common Words'
+            );
+            
+            // Create sentence structure pie chart
+            createPieChart('sentenceStructureChart',
+                visData.sentence_structures.labels,
+                visData.sentence_structures.values,
+                'Sentence Structures'
+            );
+        }
+        
+        function createRadarChart(canvasId, labels, values, title) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            // Create new chart
+            charts[canvasId] = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values.map(v => v * 100), // Convert to percentage
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100, // Scale to percentage
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createBarChart(canvasId, labels, values, title) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            // Create new chart
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createPieChart(canvasId, labels, values, title) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            // Create new chart
+            charts[canvasId] = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

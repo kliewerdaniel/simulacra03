@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Simulacra{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">Login</h3>
+            </div>
+            <div class="card-body">
+                <div id="login-error" class="alert alert-danger" style="display: none;"></div>
+                
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+                
+                <div class="mt-3 text-center">
+                    <p>Don't have an account? <a href="/auth/register">Register</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('login-form');
+        const errorDiv = document.getElementById('login-error');
+        
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide any previous error messages
+            errorDiv.style.display = 'none';
+            
+            // Create form data in the format expected by OAuth2PasswordRequestForm
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+            
+            try {
+                // Send login request
+                const response = await fetch('/auth/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Save the token to localStorage
+                    localStorage.setItem('auth_token', data.access_token);
+                    
+                    // Set the token as a cookie (this is what the server checks for)
+                    document.cookie = `auth_token=${data.access_token}; path=/; max-age=${30*60}`;
+                    
+                    // Add authorization header to future requests
+                    const authHeader = document.createElement('meta');
+                    authHeader.httpEquiv = 'Authorization';
+                    authHeader.content = `Bearer ${data.access_token}`;
+                    document.head.appendChild(authHeader);
+                    
+                    // Redirect to dashboard with token in both cookie and Authorization header
+                    const headers = new Headers();
+                    headers.append('Authorization', `Bearer ${data.access_token}`);
+                    
+                    fetch('/dashboard', {
+                        method: 'GET',
+                        headers: headers,
+                        credentials: 'include' // Include cookies
+                    })
+                    .then(response => {
+                        if (response.ok || response.redirected) {
+                            window.location.href = '/dashboard';
+                        } else {
+                            throw new Error('Failed to access dashboard');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Dashboard access error:', error);
+                        errorDiv.textContent = 'Failed to access dashboard. Please try again.';
+                        errorDiv.style.display = 'block';
+                    });
+                } else {
+                    // Handle error response
+                    const errorData = await response.json();
+                    errorDiv.textContent = errorData.detail || 'Login failed. Please check your credentials.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                // Handle network or other errors
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        });
+    });
+</script>
+{% endblock %}

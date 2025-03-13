@@ -1,0 +1,73 @@
+{
+  "features": {
+    "vocabulary_size": 1000,
+    "average_word_length": 5.0,
+    "word_frequencies": {
+      "the": 50,
+      "and": 30,
+      "to": 25
+    },
+    "rare_words": [
+      "metamorphosis",
+      "vermin",
+      "grotesque"
+    ],
+    "average_sentence_length": 20.0,
+    "sentence_length_variation": 10.0,
+    "sentence_structures": {
+      "simple": 10,
+      "complex": 5,
+      "compound": 3
+    },
+    "idioms": [
+      "in a nutshell",
+      "break a leg"
+    ],
+    "metaphors": [
+      "time is money",
+      "life is a journey"
+    ],
+    "transition_phrases": [
+      "in addition",
+      "therefore",
+      "however"
+    ],
+    "paragraph_structure": {
+      "average_length": 5,
+      "variation": 2
+    },
+    "punctuation_usage": {
+      ".": 100,
+      ",": 150,
+      "!": 10
+    },
+    "passive_voice_frequency": 0.2,
+    "active_voice_frequency": 0.8,
+    "document_count": 1,
+    "total_word_count": 5000,
+    "total_sentence_count": 250
+  },
+  "psychological_profile": {
+    "openness": 0.5,
+    "conscientiousness": 0.5,
+    "extraversion": 0.5,
+    "agreeableness": 0.5,
+    "neuroticism": 0.5,
+    "formality_level": 0.5,
+    "analytical_thinking": 0.5,
+    "emotional_expressiveness": 0.5,
+    "confidence_level": 0.5,
+    "dominant_cognitive_patterns": [],
+    "communication_preferences": [],
+    "thinking_style": "analytical"
+  },
+  "writing_style_summary": "{\"vocabulary_size\": 0, \"average_word_length\": 0.0, \"word_frequencies\": {}, \"rare_words\": [], \"average_sentence_length\": 0.0, \"sentence_length_variation\": 0.0, \"sentence_structures\": {}, \"idioms\": [], \"metaphors\": [], \"transition_phrases\": [], \"paragraph_structure\": {}, \"punctuation_usage\": {}, \"passive_voice_frequency\": 0.0, \"active_voice_frequency\": 0.0, \"document_count\": 1, \"total_word_count\": 0, \"total_sentence_count\": 0, \"error\": \"Failed to parse response content as JSON\"}",
+  "distinguishing_characteristics": [],
+  "recommendations": [
+    "Expand your vocabulary by targeting a poem every wordslist that includes more uncommon words. For example, challenge yourself to include at least 5 new 'rare' words such as 'ephemeral,' 'lucid,' or 'cathartic' in your next piece to develop a more nuanced and sophisticated style. By doing so, you can enhance the depth of your expression, which is crucial given your balanced psychological traits like openness and analytical thinking.",
+    "To address potential weaknesses in sentence structure variety, practice writing more complex and compound sentences. You could set a specific goal of increasing complex sentences in your text by 40% and compound sentences by 20%. For instance, instead of writing 'The sun set. The cold crept up.', you could combine them into a more complex structure: 'As the sun set, the cold crept up, ushering in an eerie silence.'",
+    "Given your moderate levels of extraversion and emotional expressiveness, you might benefit from experimenting with dialogues or character-driven narratives in your writings. This approach can help you channel your expressiveness more effectively by exploring different voices and emotional responses.",
+    "In order to enhance your use of metaphors and idioms \u2013 which seems to be a strength \u2013 regularly practice transforming common physical experiences into abstract metaphors. Challenge yourself to come up with new metaphors like transforming 'going through a rough patch' into 'navigating a briar patch' to enrich the imagery and emotional depth of your writing.",
+    "Experiment with less typical transitional phrases that could push your creativity and reflect a unique authorial voice. Instead of common phrases like 'in addition' or 'however,' try 'on the same note' or 'conversely,' and track how these subtle changes might alter the flow and impact of your paragraphs."
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "features": {
+    "vocabulary_size": 1000,
+    "average_word_length": 5.0,
+    "word_frequencies": {
+      "the": 50,
+      "and": 30,
+      "to": 25
+    },
+    "rare_words": [
+      "vermin",
+      "metamorphosis",
+      "grotesque"
+    ],
+    "average_sentence_length": 20.0,
+    "sentence_length_variation": 10.0,
+    "sentence_structures": {
+      "simple": 10,
+      "complex": 5,
+      "compound": 3
+    },
+    "idioms": [
+      "in a nutshell",
+      "break a leg"
+    ],
+    "metaphors": [
+      "time is money",
+      "life is a journey"
+    ],
+    "transition_phrases": [
+      "therefore",
+      "however",
+      "in addition"
+    ],
+    "paragraph_structure": {
+      "average_length": 5,
+      "variation": 2
+    },
+    "punctuation_usage": {
+      ".": 100,
+      ",": 150,
+      "!": 10
+    },
+    "passive_voice_frequency": 0.2,
+    "active_voice_frequency": 0.8,
+    "document_count": 1,
+    "total_word_count": 5000,
+    "total_sentence_count": 250
+  },
+  "psychological_profile": {
+    "openness": 0.5,
+    "conscientiousness": 0.5,
+    "extraversion": 0.5,
+    "agreeableness": 0.5,
+    "neuroticism": 0.5,
+    "formality_level": 0.5,
+    "analytical_thinking": 0.5,
+    "emotional_expressiveness": 0.5,
+    "confidence_level": 0.5,
+    "dominant_cognitive_patterns": [],
+    "communication_preferences": [],
+    "thinking_style": "analytical"
+  },
+  "writing_style_summary": "{\"vocabulary_size\": 0, \"average_word_length\": 0.0, \"word_frequencies\": {}, \"rare_words\": [], \"average_sentence_length\": 0.0, \"sentence_length_variation\": 0.0, \"sentence_structures\": {}, \"idioms\": [], \"metaphors\": [], \"transition_phrases\": [], \"paragraph_structure\": {}, \"punctuation_usage\": {}, \"passive_voice_frequency\": 0.0, \"active_voice_frequency\": 0.0, \"document_count\": 1, \"total_word_count\": 0, \"total_sentence_count\": 0, \"error\": \"Failed to parse response content as JSON\"}",
+  "distinguishing_characteristics": [],
+  "recommendations": [
+    "To enhance the use of your vocabulary, consider integrating more thematic synonyms and varying expressions around your rare words for instance, around terms like 'metamorphosis,' you might explore additional scientific or transformation-related vocabulary like 'transmutation' or 'evolution.' This approach can heighten the textual dimension and align closely with your analytical thinking style.",
+    "Examine ways to introduce more sentence variability to improve the rhythmic flow of your writing. Since your document shows a significant reliance on simple sentences, try integrating more compound-complex sentence structures. For example, instead of writing 'Gregor woke up to find himself transformed. He was a huge insect.' You might combine these thoughts to add complexity: 'When Gregor woke up one morning from unsettling dreams, he found himself transformed into a monstrous vermin.'",
+    "Given your balanced level of formality and openness, you can incorporate a mixture of professional jargon and personal anecdotes to generate a unique narrative voice that resonates on multiple levels. For instance, 'As we navigate through the labyrinth of life, my journey from a finance intern to a CFO mirrors the unpredictable and twisting paths taken by ancient explorers, revealing not just financial but personal metamorphoses.'",
+    "To improve the persuasive power of your writing, consider using your analytical strength to structure arguments more compellingly. Map out your argument using a logical framework: state an issue, present evidence, and conclude with your analysis. This structure will reflect your analytical thinking and make your arguments clearer and more convincing.",
+    "Consider using a greater variety of punctuation to create more expressive and emotionally engaging writing. Since your text predominantly uses commas and periods, try incorporating dashes, ellipses, or semicolons to give your sentences more nuanced pauses or interruptions, which can enhance the narrative flow and emphasize your points more dynamically."
+  ]
+}

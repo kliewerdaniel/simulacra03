@@ -1,0 +1,220 @@
+/* Main Styles for Simulacra Web Interface */
+
+/* Base styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    color: #333;
+    line-height: 1.6;
+    background-color: #f8f9fa;
+}
+
+/* Header and navbar */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Cards */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    font-weight: 600;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Charts and visualizations */
+.chart-container {
+    position: relative;
+    margin: auto;
+}
+
+/* Form elements */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Dashboard component */
+.dashboard-card {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-card .icon-container {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #0d6efd;
+}
+
+.dashboard-card .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: auto;
+}
+
+/* Persona cards */
+.persona-card {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.persona-card:hover {
+    border-color: #0d6efd;
+}
+
+.persona-card.selected {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.persona-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+/* Result displays */
+.result-section {
+    display: none;
+}
+
+.loading-indicator {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* File upload */
+.dropzone {
+    border: 2px dashed #0d6efd;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: background-color 0.2s;
+}
+
+.dropzone:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.dropzone.dragover {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: #0a58ca;
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+}
+
+.file-list li {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background-color: #f1f3f5;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.file-list .remove-file {
+    cursor: pointer;
+    color: #dc3545;
+}
+
+/* Content generation */
+.content-preview {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.style-param-slider {
+    margin: 1.5rem 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .dashboard-card {
+        min-height: 120px;
+    }
+    
+    .chart-container {
+        height: 250px !important;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body.dark-mode {
+        background-color: #212529;
+        color: #f8f9fa;
+    }
+    
+    body.dark-mode .card {
+        background-color: #2c3034;
+        border-color: #495057;
+    }
+    
+    body.dark-mode .card-header {
+        background-color: #343a40;
+        border-color: #495057;
+    }
+    
+    body.dark-mode .form-control {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #f8f9fa;
+    }
+    
+    body.dark-mode .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    body.dark-mode .content-preview {
+        background-color: #343a40;
+        border-color: #495057;
+    }
+}

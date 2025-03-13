@@ -1,0 +1,892 @@
+{% extends "base.html" %}
+
+{% block title %}Persona Generation - Simulacra{% endblock %}
+
+{% block additional_head %}
+<style>
+    .progress-wrapper {
+        display: none;
+    }
+    
+    #result-section {
+        display: none;
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    
+    .trait-chip {
+        display: inline-block;
+        padding: 0.3rem 0.5rem;
+        margin: 0.2rem;
+        border-radius: 1rem;
+        background-color: #e9ecef;
+        font-size: 0.875rem;
+    }
+    
+    .persona-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .persona-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .tab-pane {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Persona Generation</h1>
+
+<ul class="nav nav-tabs" id="persona-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="generate-tab" data-bs-toggle="tab" data-bs-target="#generate" type="button" role="tab" aria-controls="generate" aria-selected="true">Generate from Documents</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button" role="tab" aria-controls="create" aria-selected="false">Create Custom Persona</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="browse-tab" data-bs-toggle="tab" data-bs-target="#browse" type="button" role="tab" aria-controls="browse" aria-selected="false">My Personas</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="persona-tabs-content">
+    <!-- Generate from Documents Tab -->
+    <div class="tab-pane fade show active" id="generate" role="tabpanel" aria-labelledby="generate-tab">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Upload Documents</h5>
+                        <p class="card-text">Upload writing samples to generate a persona based on the author's style.</p>
+                        
+                        <form id="generate-form" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="file-upload" class="form-label">Select Documents</label>
+                                <input class="form-control" type="file" id="file-upload" name="files" multiple required>
+                                <div class="form-text">Supported formats: TXT, MD, DOCX, PDF</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="file-extensions" class="form-label">File Extensions</label>
+                                <input type="text" class="form-control" id="file-extensions" name="file_extensions" value="txt,md,docx,pdf">
+                                <div class="form-text">Comma-separated list of file extensions to analyze</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="api-key" class="form-label">OpenAI API Key (Optional)</label>
+                                <input type="password" class="form-control" id="api-key" name="api_key" placeholder="sk-...">
+                                <div class="form-text">Your API key will not be stored</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Generate Persona</button>
+                        </form>
+                        
+                        <div class="progress-wrapper mt-4">
+                            <p id="status-message">Processing your files...</p>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">About Persona Generation</h5>
+                        <p class="card-text">
+                            Our persona generation tool creates a detailed author persona based on writing samples.
+                            The persona captures the author's:
+                        </p>
+                        <ul>
+                            <li>Writing style characteristics</li>
+                            <li>Vocabulary preferences</li>
+                            <li>Psychological traits</li>
+                            <li>Stylistic markers and patterns</li>
+                        </ul>
+                        <p class="card-text">
+                            This persona can then be used with our style replication tool to generate new content
+                            that matches the author's distinctive voice.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-section" class="mt-4">
+            <h2 class="mb-4">Generated Persona</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span id="persona-name">Author Name</span>
+                                <button id="edit-name-btn" class="btn btn-sm btn-outline-secondary ms-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </h5>
+                            <p id="writing-voice-summary" class="card-text"></p>
+                            
+                            <h6 class="mt-4">Distinguishing Traits</h6>
+                            <div id="traits-container">
+                                <!-- Traits will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Background</h5>
+                            <p id="author-background" class="card-text"></p>
+                            
+                            <h6 class="mt-4">Recommended Topics</h6>
+                            <ul id="recommended-topics">
+                                <!-- Topics will be added here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">Personality Traits</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="personalityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">Writing Style Traits</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="writingTraitsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button id="save-persona" class="btn btn-primary">Save Persona</button>
+                <a id="create-content-btn" href="/style-replication" class="btn btn-outline-primary ms-2">Create Content with this Persona</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Custom Persona Tab -->
+    <div class="tab-pane fade" id="create" role="tabpanel" aria-labelledby="create-tab">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Create a Custom Persona</h5>
+                <p class="card-text">Define a persona with specific traits and characteristics.</p>
+                
+                <form id="custom-persona-form">
+                    <div class="mb-3">
+                        <label for="persona-name-input" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="persona-name-input" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="persona-traits-input" class="form-label">Traits (comma-separated)</label>
+                        <input type="text" class="form-control" id="persona-traits-input" name="traits" required 
+                            placeholder="e.g., analytical, compassionate, detail-oriented">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="persona-background-input" class="form-label">Background</label>
+                        <textarea class="form-control" id="persona-background-input" name="background" rows="3" required
+                            placeholder="Describe the persona's background, experiences, and perspective."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="persona-communication-style-input" class="form-label">Communication Style</label>
+                        <textarea class="form-control" id="persona-communication-style-input" name="communication_style" rows="3" required
+                            placeholder="Describe how this persona communicates, their tone, vocabulary preferences, etc."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="persona-knowledge-areas-input" class="form-label">Knowledge Areas (comma-separated)</label>
+                        <input type="text" class="form-control" id="persona-knowledge-areas-input" name="knowledge_areas"
+                            placeholder="e.g., AI ethics, climate science, literature">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Persona</button>
+                </form>
+                
+                <div id="custom-result" class="mt-4" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> Your custom persona has been created.
+                        <a id="custom-persona-link" href="#" class="alert-link">View your persona</a> or 
+                        <a href="/style-replication" class="alert-link">create content with it</a>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browse My Personas Tab -->
+    <div class="tab-pane fade" id="browse" role="tabpanel" aria-labelledby="browse-tab">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Import Persona</h5>
+                        <p class="card-text">Upload a markdown (.md) file containing a persona definition.</p>
+                        
+                        <form id="import-persona-form" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="markdown-upload" class="form-label">Select Markdown File</label>
+                                <input class="form-control" type="file" id="markdown-upload" name="file" accept=".md,.markdown,.txt" required>
+                                <div class="form-text">Supported formats: MD, MARKDOWN, TXT</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Import Persona</button>
+                        </form>
+                        
+                        <div id="import-result" class="mt-3" style="display: none;">
+                            <!-- Import result will be shown here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h5 class="mb-3">My Personas</h5>
+        <div id="personas-container" class="row row-cols-1 row-cols-md-3 g-4">
+            <!-- Personas will be loaded here -->
+            <div class="col">
+                <div class="card h-100 text-center">
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div>
+                            <p>Loading personas...</p>
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements for generate persona form
+        const generateForm = document.getElementById('generate-form');
+        const progressWrapper = document.querySelector('.progress-wrapper');
+        const statusMessage = document.getElementById('status-message');
+        const resultSection = document.getElementById('result-section');
+        
+        // Elements for custom persona form
+        const customPersonaForm = document.getElementById('custom-persona-form');
+        const customResult = document.getElementById('custom-result');
+        const customPersonaLink = document.getElementById('custom-persona-link');
+        
+        // Charts reference
+        let charts = {};
+        let currentTaskId = null;
+        
+        // Handle tab switching
+        const personaTabs = document.getElementById('persona-tabs');
+        if (personaTabs) {
+            personaTabs.addEventListener('shown.bs.tab', function(event) {
+                if (event.target.id === 'browse-tab') {
+                    loadPersonas();
+                }
+            });
+        }
+        
+        // Load personas when the page loads (if on browse tab)
+        if (document.getElementById('browse-tab').getAttribute('aria-selected') === 'true') {
+            loadPersonas();
+        }
+        
+        // Check if we're coming from analysis
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromAnalysis = urlParams.get('from_analysis');
+        if (fromAnalysis) {
+            // Show a modal with option to generate persona from analysis
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'analysisModal';
+            modal.tabIndex = '-1';
+            modal.setAttribute('aria-labelledby', 'analysisModalLabel');
+            modal.setAttribute('aria-hidden', 'true');
+            
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="analysisModalLabel">Generate Persona from Analysis</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Would you like to generate a persona based on your document analysis?</p>
+                            <form id="analysis-to-persona-form">
+                                <div class="mb-3">
+                                    <label for="api-key-analysis" class="form-label">OpenAI API Key (Optional)</label>
+                                    <input type="password" class="form-control" id="api-key-analysis" name="api_key" placeholder="sk-...">
+                                    <div class="form-text">Your API key will not be stored</div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="generate-from-analysis-btn">Generate Persona</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Show the modal
+            const bsModal = new bootstrap.Modal(document.getElementById('analysisModal'));
+            bsModal.show();
+            
+            // Handle generate button click
+            document.getElementById('generate-from-analysis-btn').addEventListener('click', function() {
+                const apiKey = document.getElementById('api-key-analysis').value;
+                generatePersonaFromAnalysis(fromAnalysis, apiKey);
+                bsModal.hide();
+            });
+        }
+        
+        // Function to generate persona from analysis
+        function generatePersonaFromAnalysis(analysisId, apiKey) {
+            // Show progress
+            progressWrapper.style.display = 'block';
+            statusMessage.textContent = 'Processing analysis data...';
+            
+            // Hide results from previous generation
+            resultSection.style.display = 'none';
+            
+            // Create form data
+            const formData = new FormData();
+            if (apiKey) {
+                formData.append('api_key', apiKey);
+            }
+            
+            // Submit the form with proper authentication
+            const token = localStorage.getItem('auth_token');
+            fetch(`/api/persona-generation/generate-from-analysis/${analysisId}`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                currentTaskId = data.task_id;
+                statusMessage.textContent = `Generating persona... (Task ID: ${currentTaskId})`;
+                
+                // Poll for status
+                pollTaskStatus(currentTaskId);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusMessage.textContent = `Error: ${error.message}`;
+                progressWrapper.classList.add('text-danger');
+            });
+        }
+        
+        // Generate persona form submission
+        if (generateForm) {
+            generateForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show progress
+                progressWrapper.style.display = 'block';
+                statusMessage.textContent = 'Uploading files...';
+                
+                // Hide results from previous generation
+                resultSection.style.display = 'none';
+                
+                // Get form data
+                const formData = new FormData(generateForm);
+                
+                // Submit the form with proper authentication
+                const token = localStorage.getItem('auth_token');
+                fetch('/api/persona-generation/generate', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    currentTaskId = data.task_id;
+                    statusMessage.textContent = `Processing documents... (Task ID: ${currentTaskId})`;
+                    
+                    // Poll for status
+                    pollTaskStatus(currentTaskId);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statusMessage.textContent = `Error: ${error.message}`;
+                    progressWrapper.classList.add('text-danger');
+                });
+            });
+        }
+        
+        // Custom persona form submission
+        if (customPersonaForm) {
+            customPersonaForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form data
+                const formData = new FormData(customPersonaForm);
+                
+                // Convert traits and knowledge areas to arrays
+                const traits = formData.get('traits').split(',').map(t => t.trim());
+                formData.delete('traits');
+                traits.forEach(trait => {
+                    formData.append('traits', trait);
+                });
+                
+                if (formData.get('knowledge_areas')) {
+                    const knowledgeAreas = formData.get('knowledge_areas').split(',').map(k => k.trim());
+                    formData.delete('knowledge_areas');
+                    knowledgeAreas.forEach(area => {
+                        formData.append('knowledge_areas', area);
+                    });
+                }
+                
+                // Submit the form using apiFetch utility which properly handles authentication
+                const token = localStorage.getItem('auth_token');
+                
+                fetch('/api/persona-generation/create-simple', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Show success message
+                    customResult.style.display = 'block';
+                    
+                    // Update link to view persona
+                    customPersonaLink.href = '/persona-generation?view=' + data.persona_id;
+                    
+                    // Reset form
+                    customPersonaForm.reset();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    customResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>Error!</strong> ${error.message}
+                        </div>
+                    `;
+                    customResult.style.display = 'block';
+                });
+            });
+        }
+        
+        function pollTaskStatus(taskId) {
+            const token = localStorage.getItem('auth_token');
+            fetch(`/api/persona-generation/status/${taskId}`, {
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                statusMessage.textContent = `Status: ${data.status.toUpperCase()}`;
+                
+                if (data.status === 'completed') {
+                    // Load results
+                    fetchResults(taskId);
+                } else if (data.status === 'failed') {
+                    statusMessage.textContent = `Error: ${data.error || 'Generation failed'}`;
+                    progressWrapper.classList.add('text-danger');
+                } else {
+                    // Continue polling
+                    setTimeout(() => pollTaskStatus(taskId), 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Error polling status:', error);
+                statusMessage.textContent = `Error checking status: ${error.message}`;
+                progressWrapper.classList.add('text-danger');
+            });
+        }
+        
+        function fetchResults(taskId) {
+            // Get results
+            const token = localStorage.getItem('auth_token');
+            fetch(`/api/persona-generation/result/${taskId}`, {
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display persona data
+                displayPersona(data);
+                
+                // Get visualization data
+                return fetch(`/api/persona-generation/visualize/${taskId}`, {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            })
+            .then(response => response.json())
+            .then(visData => {
+                // Create visualizations
+                createVisualizations(visData);
+                
+                // Hide progress, show results
+                progressWrapper.style.display = 'none';
+                resultSection.style.display = 'block';
+                
+                // Set up create content link
+                document.getElementById('create-content-btn').href = `/style-replication?persona=${currentTaskId}`;
+                
+                // Set up save button
+                document.getElementById('save-persona').addEventListener('click', function() {
+                    savePersona(currentTaskId);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching results:', error);
+                statusMessage.textContent = `Error fetching results: ${error.message}`;
+                progressWrapper.classList.add('text-danger');
+            });
+        }
+        
+        function displayPersona(data) {
+            // Display basic info
+            document.getElementById('persona-name').textContent = data.name || 'Unnamed Author';
+            document.getElementById('writing-voice-summary').textContent = data.writing_voice_summary || '';
+            document.getElementById('author-background').textContent = data.author_background || '';
+            
+            // Display traits
+            const traitsContainer = document.getElementById('traits-container');
+            traitsContainer.innerHTML = '';
+            
+            if (data.writing_characteristics && data.writing_characteristics.distinguishing_traits) {
+                data.writing_characteristics.distinguishing_traits.forEach(trait => {
+                    const chip = document.createElement('span');
+                    chip.className = 'trait-chip';
+                    chip.textContent = trait;
+                    traitsContainer.appendChild(chip);
+                });
+            }
+            
+            // Display recommended topics
+            const topicsList = document.getElementById('recommended-topics');
+            topicsList.innerHTML = '';
+            
+            if (data.recommended_topics) {
+                data.recommended_topics.forEach(topic => {
+                    const li = document.createElement('li');
+                    li.textContent = topic;
+                    topicsList.appendChild(li);
+                });
+            }
+            
+            // Set up edit name button
+            document.getElementById('edit-name-btn').addEventListener('click', function() {
+                const nameElement = document.getElementById('persona-name');
+                const currentName = nameElement.textContent;
+                
+                // Replace with input
+                nameElement.innerHTML = `
+                    <input type="text" class="form-control form-control-sm" value="${currentName}">
+                    <button class="btn btn-sm btn-primary mt-2">Save</button>
+                `;
+                
+                // Add event listener to save button
+                nameElement.querySelector('button').addEventListener('click', function() {
+                    const newName = nameElement.querySelector('input').value;
+                    nameElement.textContent = newName;
+                    
+                    // TODO: Update persona name in backend
+                });
+            });
+        }
+        
+        function createVisualizations(visData) {
+            // Check if we have personality traits data
+            if (visData.personality_traits) {
+                createRadarChart('personalityChart', 
+                    visData.personality_traits.labels, 
+                    visData.personality_traits.values,
+                    'Personality Traits'
+                );
+            }
+            
+            // Check if we have writing traits data
+            if (visData.writing_traits) {
+                createRadarChart('writingTraitsChart', 
+                    visData.writing_traits.labels, 
+                    visData.writing_traits.values,
+                    'Writing Style Traits'
+                );
+            }
+        }
+        
+        function createRadarChart(canvasId, labels, values, title) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            // Create new chart
+            charts[canvasId] = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values.map(v => v * 100), // Convert to percentage
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100, // Scale to percentage
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function loadPersonas() {
+            const personasContainer = document.getElementById('personas-container');
+            
+            // Fetch personas
+            const token = localStorage.getItem('auth_token');
+            fetch('/api/persona-generation/list', {
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                personasContainer.innerHTML = '';
+                
+                if (data.personas.length === 0) {
+                    personasContainer.innerHTML = `
+                        <div class="col-12 text-center">
+                            <div class="card p-5">
+                                <p>You don't have any personas yet.</p>
+                                <p>Generate a persona from documents or create a custom persona to get started.</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Create cards for each persona
+                data.personas.forEach(persona => {
+                    const personaCard = document.createElement('div');
+                    personaCard.className = 'col';
+                    personaCard.innerHTML = `
+                        <div class="card h-100 persona-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="persona-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0">${persona.name}</h5>
+                                        <small class="text-muted">${persona.type}</small>
+                                    </div>
+                                </div>
+                                <p class="card-text">Created: ${formatDate(persona.created_at)}</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <a href="/persona-generation?view=${persona.id}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a href="/style-replication?persona=${persona.id}" class="btn btn-sm btn-primary">Create Content</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    personasContainer.appendChild(personaCard);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading personas:', error);
+                personasContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            Error loading personas: ${error.message}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        function savePersona(personaId) {
+            // This would typically update metadata or move from temporary to permanent storage
+            const token = localStorage.getItem('auth_token');
+            fetch(`/api/persona-generation/save/${personaId}`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'alert alert-success alert-dismissible fade show mt-3';
+                successMessage.innerHTML = `
+                    Persona saved successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                resultSection.appendChild(successMessage);
+            })
+            .catch(error => {
+                console.error('Error saving persona:', error);
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'alert alert-danger alert-dismissible fade show mt-3';
+                errorMessage.innerHTML = `
+                    Error saving persona: ${error.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                resultSection.appendChild(errorMessage);
+            });
+        }
+        
+        // Import persona form submission
+        const importPersonaForm = document.getElementById('import-persona-form');
+        if (importPersonaForm) {
+            importPersonaForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const importResult = document.getElementById('import-result');
+                importResult.innerHTML = `
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span>Importing persona from markdown...</span>
+                        </div>
+                    </div>
+                `;
+                importResult.style.display = 'block';
+                
+                // Get form data
+                const formData = new FormData(importPersonaForm);
+                
+                // Submit to the API
+                const token = localStorage.getItem('auth_token');
+                fetch('/api/persona-generation/upload-markdown', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.detail || 'Error importing persona');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Show success message
+                    importResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>Success!</strong> ${data.message}
+                            <div class="mt-2">
+                                <a href="/persona-generation?view=${data.persona_id}" class="btn btn-sm btn-outline-primary">View Persona</a>
+                                <a href="/style-replication?persona=${data.persona_id}" class="btn btn-sm btn-primary">Create Content</a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Reset form
+                    importPersonaForm.reset();
+                    
+                    // Refresh the persona list
+                    loadPersonas();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    importResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>Error!</strong> ${error.message}
+                        </div>
+                    `;
+                });
+            });
+        }
+        
+        // Utility function to format dates
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+    });
+</script>
+{% endblock %}

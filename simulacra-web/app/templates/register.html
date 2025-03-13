@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Simulacra{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">Create an Account</h3>
+            </div>
+            <div class="card-body">
+                <div id="register-error" class="alert alert-danger" style="display: none;"></div>
+                <div id="register-success" class="alert alert-success" style="display: none;"></div>
+                
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email (optional)</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Full Name (optional)</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name">
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
+                
+                <div class="mt-3 text-center">
+                    <p>Already have an account? <a href="/auth/login">Login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const registerForm = document.getElementById('register-form');
+        const errorDiv = document.getElementById('register-error');
+        const successDiv = document.getElementById('register-success');
+        
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide any previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Get form data
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                email: document.getElementById('email').value || null,
+                full_name: document.getElementById('full_name').value || null
+            };
+            
+            try {
+                // Send registration request
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // Show success message
+                    successDiv.textContent = 'Registration successful! Redirecting to login...';
+                    successDiv.style.display = 'block';
+                    
+                    // Clear form
+                    registerForm.reset();
+                    
+                    // Redirect to login after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/auth/login';
+                    }, 2000);
+                } else {
+                    // Handle error response
+                    const errorData = await response.json();
+                    errorDiv.textContent = errorData.detail || 'Registration failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                // Handle network or other errors
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+                console.error('Registration error:', error);
+            }
+        });
+    });
+</script>
+{% endblock %}

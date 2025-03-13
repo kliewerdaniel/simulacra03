@@ -1,0 +1,898 @@
+{% extends "base.html" %}
+
+{% block title %}Style Replication - Simulacra{% endblock %}
+
+{% block additional_head %}
+<style>
+    .progress-wrapper {
+        display: none;
+    }
+    
+    #result-section {
+        display: none;
+    }
+    
+    .persona-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .persona-card:hover {
+        border-color: #0d6efd;
+    }
+    
+    .persona-card.selected {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .style-params-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .style-parameter {
+        margin-bottom: 1.5rem;
+    }
+    
+    .content-preview {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #dee2e6;
+        white-space: pre-wrap;
+    }
+    
+    /* Range slider styling */
+    .range-slider {
+        width: 100%;
+    }
+    
+    .range-value {
+        font-weight: bold;
+    }
+    
+    /* Error message styling */
+    .feedback-error {
+        margin-top: 1rem;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Style Replication</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">About Style Replication</h5>
+                <p class="card-text">
+                    This tool generates content that authentically captures an author's distinctive writing style
+                    based on a previously created persona.
+                </p>
+                <p class="card-text">
+                    You can control various parameters to adjust how closely the output matches the original style,
+                    from vocabulary choices and sentence structures to tone and stylistic quirks.
+                </p>
+                <p class="card-text">
+                    To get started, select a persona and define your content requirements.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Step 1: Select a Persona -->
+        <div class="card mb-4" id="step-1">
+            <div class="card-header">
+                Step 1: Select a Persona
+            </div>
+            <div class="card-body">
+                <p class="card-text">Choose a previously created persona for content generation.</p>
+                
+                <div id="personas-container" class="row row-cols-1 row-cols-md-2 g-4">
+                    <div class="col">
+                        <div class="card h-100 text-center">
+                            <div class="card-body d-flex align-items-center justify-content-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-center">
+                    <a href="/persona-generation" class="btn btn-outline-primary">Create a New Persona</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Define Content Requirements -->
+        <div class="card mb-4" id="step-2" style="display: none;">
+            <div class="card-header">
+                Step 2: Define Content Requirements
+            </div>
+            <div class="card-body">
+                <form id="content-form">
+                    <input type="hidden" id="persona-id" name="persona_id">
+                    
+                    <div class="mb-3">
+                        <label for="topic" class="form-label">Topic</label>
+                        <input type="text" class="form-control" id="topic" name="topic" required
+                               placeholder="What should the content be about?">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content-type" class="form-label">Content Type</label>
+                        <select class="form-select" id="content-type" name="content_type" required>
+                            <option value="" selected disabled>Select a content type</option>
+                            <option value="blog post">Blog Post</option>
+                            <option value="article">Article</option>
+                            <option value="email">Email</option>
+                            <option value="social media post">Social Media Post</option>
+                            <option value="story">Story</option>
+                            <option value="essay">Essay</option>
+                            <option value="marketing copy">Marketing Copy</option>
+                            <option value="technical document">Technical Document</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="target-audience" class="form-label">Target Audience</label>
+                        <input type="text" class="form-control" id="target-audience" name="target_audience" 
+                               value="General" placeholder="Who is the intended audience?">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="key-points" class="form-label">Key Points (one per line)</label>
+                        <textarea class="form-control" id="key-points" name="key_points" rows="3"
+                                  placeholder="Important points to include in the content"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tone" class="form-label">Tone (Optional)</label>
+                        <input type="text" class="form-control" id="tone" name="tone"
+                               placeholder="Specific tone for this content (leave blank to use author's natural tone)">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="length" class="form-label">Length</label>
+                        <select class="form-select" id="length" name="length">
+                            <option value="short">Short (1-2 paragraphs)</option>
+                            <option value="medium" selected>Medium (3-5 paragraphs)</option>
+                            <option value="long">Long (6+ paragraphs)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="style-fidelity" class="form-label">Style Fidelity: <span id="style-fidelity-value">80%</span></label>
+                        <input type="range" class="form-range" id="style-fidelity" name="style_fidelity" 
+                               min="0.1" max="1.0" step="0.1" value="0.8">
+                        <div class="form-text">How closely should the output match the author's style?</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api-key" class="form-label">OpenAI API Key (Optional)</label>
+                        <input type="password" class="form-control" id="api-key" name="api_key" placeholder="sk-...">
+                        <div class="form-text">Your API key will not be stored</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" id="back-to-step-1">Back</button>
+                        <button type="submit" class="btn btn-primary">Generate Content</button>
+                    </div>
+                </form>
+                
+                <div class="progress-wrapper mt-4">
+                    <p id="status-message">Generating content...</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Style Parameters (Hidden by default) -->
+<div class="card mb-4" id="advanced-params" style="display: none;">
+    <div class="card-header">
+        Advanced Style Parameters
+    </div>
+    <div class="card-body">
+        <div class="style-params-container">
+            <div class="style-parameter">
+                <label for="vocabulary-adherence" class="form-label">Vocabulary Adherence: <span id="vocabulary-adherence-value">72%</span></label>
+                <input type="range" class="form-range" id="vocabulary-adherence" min="0.1" max="1.0" step="0.1" value="0.72">
+                <div class="form-text">How closely to match the author's typical word choices.</div>
+            </div>
+            
+            <div class="style-parameter">
+                <label for="sentence-structure" class="form-label">Sentence Structure Adherence: <span id="sentence-structure-value">72%</span></label>
+                <input type="range" class="form-range" id="sentence-structure" min="0.1" max="1.0" step="0.1" value="0.72">
+                <div class="form-text">How closely to match the author's typical sentence patterns.</div>
+            </div>
+            
+            <div class="style-parameter">
+                <label for="rhetorical-devices" class="form-label">Rhetorical Devices Usage: <span id="rhetorical-devices-value">64%</span></label>
+                <input type="range" class="form-range" id="rhetorical-devices" min="0.1" max="1.0" step="0.1" value="0.64">
+                <div class="form-text">How frequently to incorporate the author's rhetorical devices.</div>
+            </div>
+            
+            <div class="style-parameter">
+                <label for="tone-consistency" class="form-label">Tone Consistency: <span id="tone-consistency-value">72%</span></label>
+                <input type="range" class="form-range" id="tone-consistency" min="0.1" max="1.0" step="0.1" value="0.72">
+                <div class="form-text">How closely to match the author's typical tone.</div>
+            </div>
+            
+            <div class="style-parameter">
+                <label for="quirk-frequency" class="form-label">Quirk Frequency: <span id="quirk-frequency-value">56%</span></label>
+                <input type="range" class="form-range" id="quirk-frequency" min="0.1" max="1.0" step="0.1" value="0.56">
+                <div class="form-text">How often to incorporate the author's writing quirks and idiosyncrasies.</div>
+            </div>
+            
+            <div class="style-parameter">
+                <label for="creative-freedom" class="form-label">Creative Freedom: <span id="creative-freedom-value">36%</span></label>
+                <input type="range" class="form-range" id="creative-freedom" min="0.1" max="1.0" step="0.1" value="0.36">
+                <div class="form-text">How much creative flexibility to allow beyond the author's established patterns.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div id="result-section">
+    <h2 class="mb-4">Generated Content</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <span id="result-title">Content</span>
+                <span class="badge bg-primary ms-2" id="result-type">Blog Post</span>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" id="copy-content">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <button class="btn btn-sm btn-outline-primary ms-2" id="download-content">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="content-preview" id="content-preview"></div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <button class="btn btn-outline-primary" id="refine-content">Refine Content</button>
+                <button class="btn btn-primary" id="generate-new">Generate New Content</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card" id="feedback-card" style="display: none;">
+        <div class="card-header">
+            Provide Feedback for Refinement
+        </div>
+        <div class="card-body">
+            <form id="feedback-form">
+                <input type="hidden" name="content_id" id="content-id">
+                
+                <div class="mb-3">
+                    <label class="form-label">Overall Rating</label>
+                    <div class="rating-stars">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="overall_rating" id="overall-1" value="1">
+                            <label class="form-check-label" for="overall-1">1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="overall_rating" id="overall-2" value="2">
+                            <label class="form-check-label" for="overall-2">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="overall_rating" id="overall-3" value="3" checked>
+                            <label class="form-check-label" for="overall-3">3</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="overall_rating" id="overall-4" value="4">
+                            <label class="form-check-label" for="overall-4">4</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="overall_rating" id="overall-5" value="5">
+                            <label class="form-check-label" for="overall-5">5</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Style Match Rating</label>
+                    <div class="rating-stars">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="style_match_rating" id="style-1" value="1">
+                            <label class="form-check-label" for="style-1">1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="style_match_rating" id="style-2" value="2">
+                            <label class="form-check-label" for="style-2">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="style_match_rating" id="style-3" value="3" checked>
+                            <label class="form-check-label" for="style-3">3</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="style_match_rating" id="style-4" value="4">
+                            <label class="form-check-label" for="style-4">4</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="style_match_rating" id="style-5" value="5">
+                            <label class="form-check-label" for="style-5">5</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Content Quality Rating</label>
+                    <div class="rating-stars">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="content_quality_rating" id="quality-1" value="1">
+                            <label class="form-check-label" for="quality-1">1</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="content_quality_rating" id="quality-2" value="2">
+                            <label class="form-check-label" for="quality-2">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="content_quality_rating" id="quality-3" value="3" checked>
+                            <label class="form-check-label" for="quality-3">3</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="content_quality_rating" id="quality-4" value="4">
+                            <label class="form-check-label" for="quality-4">4</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="content_quality_rating" id="quality-5" value="5">
+                            <label class="form-check-label" for="quality-5">5</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="specific-feedback" class="form-label">Specific Feedback (One suggestion per line)</label>
+                    <textarea class="form-control" id="specific-feedback" name="specific_feedback" rows="3"
+                              placeholder="Provide specific feedback on what could be improved"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="elements-to-emphasize" class="form-label">Stylistic Elements to Emphasize More (One per line)</label>
+                    <textarea class="form-control" id="elements-to-emphasize" name="elements_to_emphasize" rows="2"
+                              placeholder="Elements that should be more prominent"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="elements-to-reduce" class="form-label">Stylistic Elements to Tone Down (One per line)</label>
+                    <textarea class="form-control" id="elements-to-reduce" name="elements_to_reduce" rows="2"
+                              placeholder="Elements that are too prominent"></textarea>
+                </div>
+                
+                <div class="alert alert-danger feedback-error" id="feedback-error"></div>
+                
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" id="cancel-feedback">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Refine Content</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Define helper functions
+    function formatDate(dateString) {
+        if (!dateString) return 'Unknown';
+        const date = new Date(dateString);
+        return date.toLocaleDateString();
+    }
+    
+    // Define sliders array for advanced parameters
+    const sliders = [
+        { id: 'vocabulary-adherence', valueId: 'vocabulary-adherence-value', baseFactor: 0.9, inverseFactor: false },
+        { id: 'sentence-structure', valueId: 'sentence-structure-value', baseFactor: 0.9, inverseFactor: false },
+        { id: 'rhetorical-devices', valueId: 'rhetorical-devices-value', baseFactor: 0.8, inverseFactor: false },
+        { id: 'tone-consistency', valueId: 'tone-consistency-value', baseFactor: 0.9, inverseFactor: false },
+        { id: 'quirk-frequency', valueId: 'quirk-frequency-value', baseFactor: 0.7, inverseFactor: false },
+        { id: 'creative-freedom', valueId: 'creative-freedom-value', baseFactor: 0.45, inverseFactor: true }
+    ];
+    
+    // Basic UI elements
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+    const personasContainer = document.getElementById('personas-container');
+    const personaIdInput = document.getElementById('persona-id');
+    const contentForm = document.getElementById('content-form');
+    const backToStep1Button = document.getElementById('back-to-step-1');
+    const progressWrapper = document.querySelector('.progress-wrapper');
+    const statusMessage = document.getElementById('status-message');
+    const resultSection = document.getElementById('result-section');
+    
+    // For feedback and results
+    const feedbackCard = document.getElementById('feedback-card');
+    const feedbackForm = document.getElementById('feedback-form');
+    const cancelFeedbackButton = document.getElementById('cancel-feedback');
+    const feedbackError = document.getElementById('feedback-error');
+    const contentIdInput = document.getElementById('content-id');
+    const refineContentButton = document.getElementById('refine-content');
+    const generateNewButton = document.getElementById('generate-new');
+    const copyContentButton = document.getElementById('copy-content');
+    const downloadContentButton = document.getElementById('download-content');
+    const contentPreview = document.getElementById('content-preview');
+    const resultTitle = document.getElementById('result-title');
+    const resultType = document.getElementById('result-type');
+    
+    // For style parameters
+    const styleFidelitySlider = document.getElementById('style-fidelity');
+    const styleFidelityValue = document.getElementById('style-fidelity-value');
+    
+    // Variables
+    let selectedPersonaId = null;
+    let currentTaskId = null;
+    let currentContent = null;
+    let currentContentId = null;
+
+    // Load personas
+    loadPersonas();
+    
+    // Initialize range sliders
+    initializeSliders();
+    
+    // Event listeners
+    backToStep1Button.addEventListener('click', function() {
+        step1.style.display = 'block';
+        step2.style.display = 'none';
+    });
+    
+    styleFidelitySlider.addEventListener('input', function() {
+        styleFidelityValue.textContent = Math.round(this.value * 100) + '%';
+        updateAdvancedSliders();
+    });
+    
+    contentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateContent();
+    });
+    
+    copyContentButton.addEventListener('click', function() {
+        copyContent();
+    });
+    
+    downloadContentButton.addEventListener('click', function() {
+        downloadContent();
+    });
+    
+    refineContentButton.addEventListener('click', function() {
+        showFeedbackForm();
+    });
+    
+    generateNewButton.addEventListener('click', function() {
+        resetForm();
+    });
+    
+    cancelFeedbackButton.addEventListener('click', function() {
+        feedbackCard.style.display = 'none';
+    });
+    
+    // Add proper form submission handler for feedback
+    feedbackForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitFeedback();
+    });
+    
+    // Functions
+    function loadPersonas() {
+        // Fetch personas from the API
+        fetch('/api/persona-generation/list', {
+            credentials: 'same-origin',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load personas. Please try again later.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            personasContainer.innerHTML = '';
+            
+            if (!data.personas || data.personas.length === 0) {
+                personasContainer.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="card p-5">
+                            <p>You don't have any personas yet.</p>
+                            <p>Please <a href="/persona-generation">create a persona</a> first.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create cards for each persona
+            data.personas.forEach(persona => {
+                const personaCard = document.createElement('div');
+                personaCard.className = 'col';
+                personaCard.innerHTML = `
+                    <div class="card h-100 persona-card ${persona.id === selectedPersonaId ? 'selected' : ''}" data-persona-id="${persona.id}">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="persona-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">${persona.name}</h5>
+                                    <small class="text-muted">${persona.type || 'Persona'}</small>
+                                </div>
+                            </div>
+                            <p class="card-text">Created: ${formatDate(persona.created_at)}</p>
+                            <button class="btn btn-sm btn-primary w-100 select-persona-btn">Select this Persona</button>
+                        </div>
+                    </div>
+                `;
+                personasContainer.appendChild(personaCard);
+                
+                // Add event listener to select button
+                const selectButton = personaCard.querySelector('.select-persona-btn');
+                selectButton.addEventListener('click', function() {
+                    selectedPersonaId = persona.id;
+                    personaIdInput.value = selectedPersonaId;
+                    
+                    // Update selected state for all cards
+                    document.querySelectorAll('.persona-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    personaCard.querySelector('.persona-card').classList.add('selected');
+                    
+                    // Show step 2
+                    step1.style.display = 'none';
+                    step2.style.display = 'block';
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading personas:', error);
+            personasContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        Error loading personas: ${error.message}
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    function initializeSliders() {
+        // Initialize main style fidelity slider
+        styleFidelitySlider.addEventListener('input', function() {
+            styleFidelityValue.textContent = Math.round(this.value * 100) + '%';
+            updateAdvancedSliders();
+        });
+        
+        // Set initial values
+        updateAdvancedSliders();
+    }
+    
+    function updateAdvancedSliders() {
+        const fidelity = parseFloat(styleFidelitySlider.value);
+        
+        // Update each advanced slider based on the main fidelity slider
+        sliders.forEach(slider => {
+            const sliderElement = document.getElementById(slider.id);
+            const valueElement = document.getElementById(slider.valueId);
+            if (sliderElement && valueElement) {
+                let value;
+                if (slider.inverseFactor) {
+                    // For creative freedom, it's inverse to fidelity
+                    value = 1.0 - (fidelity * slider.baseFactor);
+                } else {
+                    value = fidelity * slider.baseFactor;
+                }
+                
+                // Ensure value is between 0.1 and 1.0
+                value = Math.max(0.1, Math.min(1.0, value));
+                
+                sliderElement.value = value.toFixed(2);
+                valueElement.textContent = Math.round(value * 100) + '%';
+            }
+        });
+    }
+    
+    function generateContent() {
+        // Show progress
+        progressWrapper.style.display = 'block';
+        statusMessage.textContent = 'Generating content...';
+        
+        // Hide results
+        resultSection.style.display = 'none';
+        
+        // Get form data
+        const formData = new FormData(contentForm);
+        
+        // Convert key points to array if needed
+        const keyPointsText = formData.get('key_points');
+        if (keyPointsText) {
+            const keyPoints = keyPointsText.split('\n').filter(point => point.trim() !== '');
+            formData.delete('key_points');
+            keyPoints.forEach(point => {
+                formData.append('key_points', point);
+            });
+        }
+        
+        // Submit the form
+        fetch('/api/style-replication/generate', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            currentTaskId = data.task_id;
+            statusMessage.textContent = `Generating content... (Task ID: ${currentTaskId})`;
+            
+            // Poll for status
+            pollTaskStatus(currentTaskId);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusMessage.textContent = `Error: ${error.message}`;
+            progressWrapper.classList.add('text-danger');
+            // Hide loading after 3 seconds
+            setTimeout(() => {
+                progressWrapper.style.display = 'none';
+            }, 3000);
+        });
+    }
+    
+    function pollTaskStatus(taskId) {
+            fetch(`/api/style-replication/status/${taskId}`, {
+            credentials: 'same-origin',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed') {
+                // Task is complete, fetch the result
+                fetchTaskResult(taskId);
+            } else if (data.status === 'failed') {
+                // Task failed
+                statusMessage.textContent = `Error: Content generation failed`;
+                progressWrapper.classList.add('text-danger');
+                setTimeout(() => {
+                    progressWrapper.style.display = 'none';
+                }, 3000);
+            } else {
+                // Task is still running, poll again after a delay
+                setTimeout(() => pollTaskStatus(taskId), 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error polling status:', error);
+            statusMessage.textContent = `Error: ${error.message}`;
+            progressWrapper.classList.add('text-danger');
+            setTimeout(() => {
+                progressWrapper.style.display = 'none';
+            }, 3000);
+        });
+    }
+    
+    function fetchTaskResult(taskId) {
+        fetch(`/api/style-replication/result/${taskId}`, {
+            credentials: 'same-origin',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch result');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Store result data
+            currentContent = data;
+            currentContentId = data.id;
+            contentIdInput.value = currentContentId;
+            
+            // Display the result
+            displayResult(data);
+            
+            // Hide progress indicator
+            progressWrapper.style.display = 'none';
+            
+            // Show result section
+            resultSection.style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error fetching result:', error);
+            statusMessage.textContent = `Error: ${error.message}`;
+            progressWrapper.classList.add('text-danger');
+            setTimeout(() => {
+                progressWrapper.style.display = 'none';
+            }, 3000);
+        });
+    }
+    
+    function displayResult(data) {
+        // Set the content preview
+        contentPreview.innerHTML = data.html || data.plain_text.replace(/\n/g, '<br>');
+        
+        // Set the result title and type
+        resultTitle.textContent = data.metadata?.topic || 'Generated Content';
+        resultType.textContent = data.metadata?.content_type || 'Content';
+    }
+    
+    function showFeedbackForm() {
+        feedbackCard.style.display = 'block';
+        feedbackError.style.display = 'none';
+        
+        // Scroll to the feedback form
+        feedbackCard.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function submitFeedback() {
+        // Show progress indicator
+        progressWrapper.style.display = 'block';
+        statusMessage.textContent = 'Processing feedback and refining content...';
+        
+        // Hide feedback form and result initially
+        feedbackCard.style.display = 'none';
+        resultSection.style.display = 'none';
+        
+        const formData = new FormData(feedbackForm);
+        
+        // Add API key if available
+        if (document.getElementById('api-key').value) {
+            formData.append('api_key', document.getElementById('api-key').value);
+        }
+        
+        // Convert text areas with multiple lines to arrays
+        ['specific_feedback', 'elements_to_emphasize', 'elements_to_reduce'].forEach(fieldName => {
+            const text = formData.get(fieldName);
+            if (text) {
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                formData.delete(fieldName);
+                lines.forEach(line => {
+                    formData.append(fieldName, line);
+                });
+            }
+        });
+        
+        // Submit the feedback
+        fetch('/api/style-replication/refine', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                // Show error
+                feedbackError.textContent = data.error;
+                feedbackError.style.display = 'block';
+                feedbackCard.style.display = 'block';
+                progressWrapper.style.display = 'none';
+            } else {
+                // Store task ID and poll for status
+                currentTaskId = data.task_id;
+                statusMessage.textContent = `Refining content... (Task ID: ${currentTaskId})`;
+                
+                // Poll for status
+                pollTaskStatus(currentTaskId);
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting feedback:', error);
+            feedbackError.textContent = error.message;
+            feedbackError.style.display = 'block';
+            feedbackCard.style.display = 'block';
+            progressWrapper.style.display = 'none';
+        });
+    }
+    
+    function copyContent() {
+        const textToCopy = currentContent?.plain_text || contentPreview.innerText;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            // Show success message
+            const origText = copyContentButton.innerHTML;
+            copyContentButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                copyContentButton.innerHTML = origText;
+            }, 2000);
+        }).catch(err => {
+            console.error('Could not copy text: ', err);
+        });
+    }
+    
+    function downloadContent() {
+        if (!currentContent) return;
+        
+        const text = currentContent.plain_text;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `content_${currentContentId}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 0);
+    }
+    
+    function resetForm() {
+        // Reset the form
+        contentForm.reset();
+        
+        // Show step 1
+        step1.style.display = 'block';
+        step2.style.display = 'none';
+        
+        // Hide results
+        resultSection.style.display = 'none';
+        
+        // Hide feedback form
+        feedbackCard.style.display = 'none';
+        
+        // Reset progress
+        progressWrapper.style.display = 'none';
+        progressWrapper.classList.remove('text-danger');
+        
+        // Reset variables
+        selectedPersonaId = null;
+        currentTaskId = null;
+        currentContent = null;
+        currentContentId = null;
+    }
+
+    // Check if we have a persona ID from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const personaIdParam = urlParams.get('persona');
+    if (personaIdParam) {
+        // Pre-select this persona
+        selectedPersonaId = personaIdParam;
+        personaIdInput.value = selectedPersonaId;
+        
+        // Skip to step 2
+        step1.style.display = 'none';
+        step2.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

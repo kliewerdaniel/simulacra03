@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Simulacra{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Welcome to Simulacra, {{ user.username }}</h1>
+        <div class="alert alert-success">
+            <p class="mb-0">You are successfully logged in!</p>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-file-alt me-2"></i>Document Analysis
+                </h5>
+                <p class="card-text">Analyze documents to extract insights, themes, and key information.</p>
+                <a href="/document-analysis" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-user-circle me-2"></i>Persona Generation
+                </h5>
+                <p class="card-text">Generate detailed personas based on your requirements and data.</p>
+                <a href="/persona-generation" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-pen-fancy me-2"></i>Style Replication
+                </h5>
+                <p class="card-text">Replicate writing styles and tones for consistent content creation.</p>
+                <a href="/style-replication" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <p>No recent activity to display.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure the auth token is properly set
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            window.location.href = '/auth/login';
+            return;
+        }
+        
+        // Set the token as a cookie if not already set
+        if (!document.cookie.includes('auth_token=')) {
+            document.cookie = `auth_token=${token}; path=/; max-age=${30*60}`;
+        }
+    });
+</script>
+{% endblock %}

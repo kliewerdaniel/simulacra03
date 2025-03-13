@@ -1,0 +1,38 @@
+{
+  "features": {
+    "vocabulary_size": 0,
+    "average_word_length": 0.0,
+    "word_frequencies": {},
+    "rare_words": [],
+    "average_sentence_length": 0.0,
+    "sentence_length_variation": 0.0,
+    "sentence_structures": {},
+    "idioms": [],
+    "metaphors": [],
+    "transition_phrases": [],
+    "paragraph_structure": {},
+    "punctuation_usage": {},
+    "passive_voice_frequency": 0.0,
+    "active_voice_frequency": 0.0,
+    "document_count": 0,
+    "total_word_count": 0,
+    "total_sentence_count": 0
+  },
+  "psychological_profile": {
+    "openness": 0.5,
+    "conscientiousness": 0.5,
+    "extraversion": 0.5,
+    "agreeableness": 0.5,
+    "neuroticism": 0.5,
+    "formality_level": 0.5,
+    "analytical_thinking": 0.5,
+    "emotional_expressiveness": 0.5,
+    "confidence_level": 0.5,
+    "dominant_cognitive_patterns": [],
+    "communication_preferences": [],
+    "thinking_style": "analytical"
+  },
+  "writing_style_summary": "{\"vocabulary_size\": 0, \"average_word_length\": 0.0, \"word_frequencies\": {}, \"rare_words\": [], \"average_sentence_length\": 0.0, \"sentence_length_variation\": 0.0, \"sentence_structures\": {}, \"idioms\": [], \"metaphors\": [], \"transition_phrases\": [], \"paragraph_structure\": {}, \"punctuation_usage\": {}, \"passive_voice_frequency\": 0.0, \"active_voice_frequency\": 0.0, \"document_count\": 1, \"total_word_count\": 0, \"total_sentence_count\": 0, \"error\": \"Failed to parse response content as JSON\"}",
+  "distinguishing_characteristics": [],
+  "recommendations": []
+}

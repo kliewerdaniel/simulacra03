@@ -1,0 +1,23 @@
+{
+  "id": "11c18e0a-73f5-43e2-a7fe-75051dba2e1a",
+  "name": "Test Persona",
+  "traits": [
+    "analytical",
+    "creative",
+    "detail-oriented"
+  ],
+  "background": "A skilled software engineer with extensive experience in web development, data analysis, and AI technologies. Has a background in computer science and mathematics. Values elegant code solutions and spends time optimizing algorithms.",
+  "communication_style": "Clear and concise communication that is rich in technical detail. Prefers to communicate with precise terminology rather than metaphors. Explains complex concepts in a structured, logical manner. Comes across as thoughtful and methodical.",
+  "knowledge_areas": [
+    "softwsoftware engineering",
+    "machine learning",
+    "data structures",
+    "algorithms",
+    "web developmentare engineering",
+    "machine learning",
+    "data structures",
+    "algorithms",
+    "web development"
+  ],
+  "additional_details": {}
+}
