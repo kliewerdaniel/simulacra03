@@ -53,8 +53,8 @@ simulacra/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/simulacra.git
-cd simulacra
+git clone https://github.com/kliewerdaniel/simulacra03.git
+cd simulacra03
 ```
 
 2. Create and activate a virtual environment:
